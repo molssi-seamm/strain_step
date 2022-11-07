@@ -2,7 +2,5 @@
 History
 =======
 
-2022.11.6 (2022-11-06)
-----------------------
-
-* Plug-in created using the SEAMM plug-in cookiecutter.
+2022.11.7 -- Initial release
+  First version, which handles straining systems moving the atoms affinely.
