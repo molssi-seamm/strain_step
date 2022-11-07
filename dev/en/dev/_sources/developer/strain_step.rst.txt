@@ -1,0 +1,53 @@
+strain\_step package
+====================
+
+Submodules
+----------
+
+strain\_step.metadata module
+----------------------------
+
+.. automodule:: strain_step.metadata
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+strain\_step.strain module
+--------------------------
+
+.. automodule:: strain_step.strain
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+strain\_step.strain\_parameters module
+--------------------------------------
+
+.. automodule:: strain_step.strain_parameters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+strain\_step.strain\_step module
+--------------------------------
+
+.. automodule:: strain_step.strain_step
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+strain\_step.tk\_strain module
+------------------------------
+
+.. automodule:: strain_step.tk_strain
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: strain_step
+   :members:
+   :undoc-members:
+   :show-inheritance:
