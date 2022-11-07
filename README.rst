@@ -26,7 +26,7 @@ SEAMM Strain Plug-in
    :target: https://pypi.python.org/pypi/strain_step
    :alt: PyPi VERSION
 
-A SEAMM plug-in for straining periodic systems
+A SEAMM plug-in for straining periodic systems.
 
 * Free software: BSD-3-Clause
 * Documentation: https://molssi-seamm.github.io/strain_step/index.html
@@ -35,20 +35,25 @@ A SEAMM plug-in for straining periodic systems
 Features
 --------
 
-* Please edit this section!
+Applies an arbitrary strain to the system, using input in `Voigt notation`_. Note the
+factor of two in the engineering shear strains, which is the normal convention used in
+simulations. Other than that, there really isn't much to say about this plug-in! It is
+simple, and it works.
+
+.. _`Voigt notation`: https://en.wikipedia.org/wiki/Voigt_notation
 
 Acknowledgements
 ----------------
 
-This package was created with the `molssi-seamm/cookiecutter-seamm-plugin`_ tool, which
-is based on the excellent Cookiecutter_.
+This package was created with Cookiecutter_ and the
+`molssi-seamm/cookiecutter-seamm-plugin`_ project template.
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`molssi-seamm/cookiecutter-seamm-plugin`: https://github.com/molssi-seamm/cookiecutter-seamm-plugin
 
 Developed by the Molecular Sciences Software Institute (MolSSI_),
 which receives funding from the `National Science Foundation`_ under
-awards CHE-2136142.
+award CHE-2136142.
 
 .. _MolSSI: https://molssi.org
 .. _`National Science Foundation`: https://www.nsf.gov

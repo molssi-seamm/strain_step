@@ -1,8 +1,8 @@
-"""This file contains metadata describing the results from Strain
+"""This file contains metadata describing the results from the strain step
 
 `metadata["results"]` describes the results that this step can produce. It is a
 dictionary where the keys are the internal names of the results within this step, and
-the values are a dictionary describing the result. For example:
+the values are a dictionary describing the result. For example::
 
     metadata["results"] = {
         "total_energy": {
@@ -18,7 +18,7 @@ the values are a dictionary describing the result. For example:
                 "dft",
                 "hf",
             ],
-            "property": "total energy#Strain#{model}",
+            "property": "total energy#strain#{model}",
             "type": "float",
             "units": "E_h",
         },
@@ -65,15 +65,11 @@ metadata = {}
 
 """Properties that Strain produces."""
 # metadata["results"] = {
-#     "total_energy": {
-#         "calculation": [
-#             "energy",
-#             "optimization",
-#         ],
+#     "total energy": {
 #         "description": "The total energy",
 #         "dimensionality": "scalar",
 #         "property": "total energy#Strain#{model}",
 #         "type": "float",
-#         "units": "E_h",
+#         "units": "kJ/mol",
 #     },
 # }

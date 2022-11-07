@@ -5,11 +5,12 @@
 
 import logging
 from pathlib import Path
-import pkg_resources
 import pprint  # noqa: F401
+import textwrap
+
+from tabulate import tabulate
 
 import strain_step
-import molsystem
 import seamm
 from seamm_util import ureg, Q_  # noqa: F401
 import seamm_util.printing as printing
@@ -26,12 +27,6 @@ from seamm_util.printing import FormattedText as __
 logger = logging.getLogger(__name__)
 job = printing.getPrinter()
 printer = printing.getPrinter("Strain")
-
-# Add this module's properties to the standard properties
-path = Path(pkg_resources.resource_filename(__name__, "data/"))
-csv_file = path / "properties.csv"
-if path.exists():
-    molsystem.add_properties_from_file(csv_file)
 
 
 class Strain(seamm.Node):
@@ -59,13 +54,7 @@ class Strain(seamm.Node):
     Strain, StrainParameters
     """
 
-    def __init__(
-        self,
-        flowchart=None,
-        title="Strain",
-        extension=None,
-        logger=logger
-    ):
+    def __init__(self, flowchart=None, title="Strain", extension=None, logger=logger):
         """A step for Strain in a SEAMM flowchart.
 
         You may wish to change the title above, which is the string displayed
@@ -97,7 +86,6 @@ class Strain(seamm.Node):
             logger=logger,
         )  # yapf: disable
 
-        self._metadata = strain_step.metadata
         self.parameters = strain_step.StrainParameters()
 
     @property
@@ -128,12 +116,39 @@ class Strain(seamm.Node):
         if not P:
             P = self.parameters.values_to_dict()
 
-        text = (
-            "Please replace this with a short summary of the "
-            "Strain step, including key parameters."
+        text = "If the system is periodic it will be strained as follows:\n\n"
+        text = self.header + "\n" + __(text, **P, indent=4 * " ").__str__()
+
+        epsilon = "\N{GREEK SMALL LETTER EPSILON}"
+        table = {}
+        table["Direction"] = (
+            f"{epsilon}(xx) = {epsilon}\N{SUBSCRIPT ONE}",
+            f"{epsilon}(yy) = {epsilon}\N{SUBSCRIPT TWO}",
+            f"{epsilon}(zz) = {epsilon}\N{SUBSCRIPT THREE}",
+            f"2{epsilon}(yz) = {epsilon}\N{SUBSCRIPT FOUR}",
+            f"2{epsilon}(xz) = {epsilon}\N{SUBSCRIPT FIVE}",
+            f"2{epsilon}(xy) = {epsilon}\N{SUBSCRIPT SIX}",
+        )
+        table["Strain"] = (
+            P["strain_xx"],
+            P["strain_yy"],
+            P["strain_zz"],
+            P["strain_yz"],
+            P["strain_xz"],
+            P["strain_xy"],
+        )
+        text += "                       Strains\n"
+        text += textwrap.indent(
+            tabulate(
+                table,
+                headers="keys",
+                tablefmt="psql",
+                colalign=("right", "decimal"),
+            ),
+            self.indent + 12 * " ",
         )
 
-        return self.header + "\n" + __(text, **P, indent=4 * " ").__str__()
+        return text
 
     def run(self):
         """Run a Strain step.
@@ -153,41 +168,74 @@ class Strain(seamm.Node):
             context=seamm.flowchart_variables._data
         )
 
+        # Get the current system and configuration (ignoring the system...)
+        system, starting_configuration = self.get_system_configuration(None)
+
+        periodicity = starting_configuration.periodicity
+        if periodicity != 3:
+            printer.important(
+                __("System is not periodic, so doing nothing.", indent=self.indent)
+            )
+            return
+
         # Print what we are doing
         printer.important(__(self.description_text(P), indent=self.indent))
 
         directory = Path(self.directory)
         directory.mkdir(parents=True, exist_ok=True)
 
-        # Get the current system and configuration (ignoring the system...)
-        _, configuration = self.get_system_configuration(None)
-
-        # Results data
-        data = {}
-
-        # Temporary code just to print the parameters. You will need to change
-        # this!
-        for key in P:
-            print("{:>15s} = {}".format(key, P[key]))
-            printer.normal(
-                __(
-                    "{key:>15s} = {value}",
-                    key=key,
-                    value=P[key],
-                    indent=4 * " ",
-                    wrap=False,
-                    dedent=False,
-                )
+        if (
+            "structure handling" in P
+            and P["structure handling"] == "be put in a new configuration"
+        ):
+            configuration = system.create_configuration(
+                periodicity=periodicity,
+                coordinate_system=starting_configuration.coordinate_system,
+                atomset=starting_configuration.atomset,
+                bondset=starting_configuration.bondset,
             )
+            configuration.cell.parameters = starting_configuration.cell.parameters
+            configuration.charge = starting_configuration.charge
+            configuration.spin_multiplicity = starting_configuration.spin_multiplicity
 
-        # Analyze the results
-        self.analyze()
+            coordinates = starting_configuration.atoms.get_coordinates()
+            configuration.atoms.set_coordinates(coordinates)
+        else:
+            configuration = starting_configuration
 
-        # Put any requested results into variables or tables
-        self.store_results(
-            configuration=configuration,
-            data=data,
+        configuration.strain(
+            P["strain_xx"],
+            P["strain_yy"],
+            P["strain_zz"],
+            P["strain_yz"],
+            P["strain_xz"],
+            P["strain_xy"],
         )
+
+        table = {}
+        table["Parameter"] = (
+            "a",
+            "b",
+            "c",
+            "\N{GREEK SMALL LETTER ALPHA}",
+            "\N{GREEK SMALL LETTER BETA}",
+            "\N{GREEK SMALL LETTER GAMMA}",
+        )
+        table["Initial"] = starting_configuration.cell.parameters
+        table["Final"] = configuration.cell.parameters
+
+        text = ""
+        text += "                     Strained Cell\n"
+        text += textwrap.indent(
+            tabulate(
+                table,
+                headers="keys",
+                tablefmt="psql",
+                colalign=("center", "decimal", "decimal"),
+            ),
+            self.indent + 7 * " ",
+        )
+        printer.important(text)
 
         # Add other citations here or in the appropriate place in the code.
         # Add the bibtex to data/references.bib, and add a self.reference.cite
