@@ -1,4 +1,4 @@
-seamm
+seamm>=2026.10.3
 seamm-util
 seamm-widgets
 tabulate

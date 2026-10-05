@@ -122,6 +122,13 @@ class TkStrain(seamm.TkNode):
         for key in P:
             self[key] = P[key].widget(frame)
 
+        # The system name applies only to a new system
+        self["structure handling"].combobox.bind(
+            "<<ComboboxSelected>>", self.reset_dialog
+        )
+        self["structure handling"].combobox.bind("<Return>", self.reset_dialog)
+        self["structure handling"].combobox.bind("<FocusOut>", self.reset_dialog)
+
         # and lay them out
         self.reset_dialog()
 
@@ -159,9 +166,16 @@ class TkStrain(seamm.TkNode):
 
         # keep track of the row in a variable, so that the layout is flexible
         # if e.g. rows are skipped to control such as "method" here
+        handling = self["structure handling"].get()
+        new_system = handling == "Create a new system and configuration"
+
         row = 0
         widgets = []
         for key in P:
+            # A variable ($x or =expression) may pick any handling at run time
+            variable = handling.startswith(("$", "="))
+            if key == "system name" and not (new_system or variable):
+                continue
             self[key].grid(row=row, column=0, sticky=tk.EW)
             widgets.append(self[key])
             row += 1
