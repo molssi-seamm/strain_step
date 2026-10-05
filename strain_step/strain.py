@@ -173,7 +173,7 @@ class Strain(seamm.Node):
         )
 
         # The current system and configuration, before any new one is made
-        system, starting_configuration = self.get_system_configuration(None)
+        starting_system, starting_configuration = self.get_system_configuration(None)
 
         periodicity = starting_configuration.periodicity
         if periodicity != 3:
@@ -213,6 +213,17 @@ class Strain(seamm.Node):
         if names["configuration name"] == strain_step.STRAIN_NAME:
             vector = ", ".join(f"{s:g}" for s in strains)
             names["configuration name"] = f"strained by ({vector})"
+        # "keep current name" carries the names over to a new system or
+        # configuration
+        if (
+            system is not starting_system
+            and names["system name"] == "keep current name"
+        ):
+            system.name = starting_system.name
+        if configuration.id != starting_configuration.id and names[
+            "configuration name"
+        ] == ("keep current name"):
+            configuration.name = starting_configuration.name
         text = seamm.standard_parameters.set_names(system, configuration, names)
         printer.important(__(text, indent=self.indent + 4 * " "))
         printer.important("")
