@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Non-graphical part of the Strain step in a SEAMM flowchart
-"""
+"""Non-graphical part of the Strain step in a SEAMM flowchart"""
 
 import logging
 from pathlib import Path
@@ -147,6 +146,11 @@ class Strain(seamm.Node):
             ),
             self.indent + 12 * " ",
         )
+        text += "\n\n"
+        text += __(
+            seamm.standard_parameters.structure_handling_description(P),
+            indent=4 * " ",
+        ).__str__()
 
         return text
 
@@ -168,7 +172,7 @@ class Strain(seamm.Node):
             context=seamm.flowchart_variables._data
         )
 
-        # Get the current system and configuration (ignoring the system...)
+        # The current system and configuration, before any new one is made
         system, starting_configuration = self.get_system_configuration(None)
 
         periodicity = starting_configuration.periodicity
@@ -176,7 +180,7 @@ class Strain(seamm.Node):
             printer.important(
                 __("System is not periodic, so doing nothing.", indent=self.indent)
             )
-            return
+            return next_node
 
         # Print what we are doing
         printer.important(__(self.description_text(P), indent=self.indent))
@@ -184,33 +188,34 @@ class Strain(seamm.Node):
         directory = Path(self.directory)
         directory.mkdir(parents=True, exist_ok=True)
 
-        if (
-            "structure handling" in P
-            and P["structure handling"] == "be put in a new configuration"
-        ):
-            configuration = system.create_configuration(
-                periodicity=periodicity,
-                coordinate_system=starting_configuration.coordinate_system,
-                atomset=starting_configuration.atomset,
-                bondset=starting_configuration.bondset,
+        # Before straining: with "Overwrite the current configuration" the
+        # starting configuration is the one strained.
+        initial_cell = starting_configuration.cell.parameters
+
+        # The standard structure handling: overwrite, or a copy in a new
+        # configuration or a new system
+        system, configuration = self.get_system_configuration(P)
+
+        strains = [
+            P[key]
+            for key in (
+                "strain_xx",
+                "strain_yy",
+                "strain_zz",
+                "strain_yz",
+                "strain_xz",
+                "strain_xy",
             )
-            configuration.cell.parameters = starting_configuration.cell.parameters
-            configuration.charge = starting_configuration.charge
-            configuration.spin_multiplicity = starting_configuration.spin_multiplicity
+        ]
+        configuration.strain(*strains)
 
-            coordinates = starting_configuration.atoms.get_coordinates()
-            configuration.atoms.set_coordinates(coordinates)
-        else:
-            configuration = starting_configuration
-
-        configuration.strain(
-            P["strain_xx"],
-            P["strain_yy"],
-            P["strain_zz"],
-            P["strain_yz"],
-            P["strain_xz"],
-            P["strain_xy"],
-        )
+        names = dict(P)
+        if names["configuration name"] == strain_step.STRAIN_NAME:
+            vector = ", ".join(f"{s:g}" for s in strains)
+            names["configuration name"] = f"strained by ({vector})"
+        text = seamm.standard_parameters.set_names(system, configuration, names)
+        printer.important(__(text, indent=self.indent + 4 * " "))
+        printer.important("")
 
         table = {}
         table["Parameter"] = (
@@ -221,7 +226,7 @@ class Strain(seamm.Node):
             "\N{GREEK SMALL LETTER BETA}",
             "\N{GREEK SMALL LETTER GAMMA}",
         )
-        table["Initial"] = starting_configuration.cell.parameters
+        table["Initial"] = initial_cell
         table["Final"] = configuration.cell.parameters
 
         text = ""

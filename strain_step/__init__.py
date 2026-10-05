@@ -5,6 +5,10 @@ strain_step
 A SEAMM plug-in for straining periodic systems
 """
 
+import copy
+
+import seamm
+
 # Bring up the classes so that they appear to be directly in
 # the strain_step package.
 
@@ -18,39 +22,27 @@ from .metadata import metadata  # noqa: F401
 # Handle versioneer
 from ._version import get_versions
 
-# Parameters used for handling the structure if it is changed.
-structure_handling_parameters = {
-    "structure handling": {
-        "default": "be put in a new configuration",
-        "kind": "enum",
-        "default_units": "",
-        "enumeration": (
-            "overwrite the current configuration",
-            "be put in a new configuration",
-        ),
-        "format_string": "s",
-        "description": "Strained structure will",
-        "help_text": (
-            "Whether to overwrite the current configuration, or create a new "
-            "configuration or system and configuration for the new structure"
-        ),
-    },
-    "configuration name": {
-        "default": "strained by <strain vector>",
-        "kind": "string",
-        "default_units": "",
-        "enumeration": (
-            "strained by <strain vector>",
-            "keep current name",
-            "use SMILES string",
-            "use Canonical SMILES string",
-            "use configuration number",
-        ),
-        "format_string": "s",
-        "description": "Configuration name:",
-        "help_text": "The name for the new configuration",
-    },
-}
+# How the strained structure is handled: SEAMM's standard structure handling,
+# less the choices that make no sense here -- a strain makes one structure, and
+# discarding it would leave nothing -- defaulting, as before, to a new
+# configuration named after the strain.
+structure_handling_parameters = copy.deepcopy(
+    seamm.standard_parameters.structure_handling_parameters
+)
+del structure_handling_parameters["subsequent structure handling"]
+_handling = structure_handling_parameters["structure handling"]
+_handling["default"] = "Create a new configuration"
+_handling["enumeration"] = tuple(
+    e for e in _handling["enumeration"] if e != "Discard the structure"
+)
+_handling["description"] = "Strained structure:"
+structure_handling_parameters["system name"]["default"] = "keep current name"
+_names = structure_handling_parameters["configuration name"]
+#: Names the configuration after the strains, e.g. 'strained by (0.01, 0, 0, 0, 0, 0)'
+STRAIN_NAME = "strained by <strain vector>"
+_names["default"] = STRAIN_NAME
+_names["enumeration"] = (STRAIN_NAME, *_names["enumeration"])
+del _handling, _names
 
 __author__ = "Paul Saxe"
 __email__ = "psaxe@molssi.org"

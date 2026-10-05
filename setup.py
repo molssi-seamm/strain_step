@@ -62,6 +62,8 @@ setup(
     # Manual control if final package is compressible or not, set False to
     # prevent the .egg from being made
     zip_safe=True,
+    # The run-path tests use seamm_exec.testing
+    extras_require={'test': ['seamm-exec>=2026.10.5.2']},
 
     keywords=['SEAMM', 'SEAMMplugin', 'flowchart'],
     classifiers=[
@@ -73,8 +75,8 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3 :: Only',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ],
     entry_points={
         'org.molssi.seamm': [
