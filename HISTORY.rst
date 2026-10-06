@@ -2,6 +2,10 @@
 History
 =======
 
+2026.10.6 -- Bugfix: a new system or configuration keeps the current name
+    * With "keep current name" a new system or configuration was left without a name;
+      it now takes the current system's or configuration's name.
+
 2026.10.5 -- SEAMM's standard choices for the strained structure; bugfixes
     * The strained structure can overwrite the current configuration, go in a new
       configuration (the default, as before) or in a new system, with SEAMM's

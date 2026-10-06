@@ -171,3 +171,16 @@ def test_new_system_and_configuration(tmp_path):
     assert [name for _, name in systems] == ["argon", "strained argon"]
     assert configurations[-1][1] == systems[-1][0]
     assert cells[configurations[-1][3]][0] == pytest.approx(3.03)
+
+
+def test_keep_current_name_carries_the_names_over(tmp_path):
+    """A new system or configuration takes the current one's name."""
+    job, systems, configurations, cells = run_strain(
+        tmp_path,
+        **{
+            "structure handling": "Create a new system and configuration",
+            "configuration name": "keep current name",
+        },
+    )
+    assert [name for _, name in systems] == ["argon", "argon"]
+    assert [c[2] for c in configurations] == ["cubic", "cubic"]
